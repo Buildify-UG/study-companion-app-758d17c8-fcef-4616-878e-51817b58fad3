@@ -434,6 +434,7 @@ const StudySister: React.FC = () => {
       if (packView === 'flashcards') {
         const card = selectedPack.flashcards[currentFlashcardIndex];
         const [flipped, setFlipped] = useState(false);
+        const progress = ((currentFlashcardIndex + 1) / selectedPack.flashcards.length) * 100;
 
         return (
           <div className="space-y-6 pb-24">
@@ -445,36 +446,74 @@ const StudySister: React.FC = () => {
               ← Back
             </Button>
 
-            <div className="text-center">
-              <p className="text-sm text-muted-foreground mb-4">
-                Card {currentFlashcardIndex + 1} of {selectedPack.flashcards.length}
-              </p>
-              <Card
-                onClick={() => setFlipped(!flipped)}
-                className="p-8 cursor-pointer border-primary/20 min-h-64 flex items-center justify-center hover:border-primary/40 transition"
-              >
-                <div className="text-center">
-                  <p className="text-xs text-muted-foreground mb-4">{flipped ? 'Answer' : 'Question'}</p>
-                  <p className="text-xl font-semibold text-foreground">
-                    {flipped ? card.a : card.q}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-4">Click to flip</p>
-                </div>
-              </Card>
+            {/* Progress Bar */}
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <p className="text-sm font-semibold text-foreground">
+                  Card {currentFlashcardIndex + 1} of {selectedPack.flashcards.length}
+                </p>
+                <p className="text-xs text-primary font-bold">{Math.round(progress)}%</p>
+              </div>
+              <div className="w-full bg-muted rounded-full h-3 overflow-hidden">
+                <div
+                  className="bg-gradient-to-r from-primary via-accent to-secondary h-3 rounded-full transition-all duration-500 ease-out animate-pulse-glow"
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
             </div>
 
+            {/* Flashcard */}
+            <div className="text-center">
+              <div
+                onClick={() => setFlipped(!flipped)}
+                className={`p-8 cursor-pointer min-h-80 flex items-center justify-center rounded-xl border-2 transition-all duration-300 ${
+                  flipped
+                    ? 'bg-gradient-to-br from-accent/20 to-primary/10 border-accent/40'
+                    : 'bg-gradient-to-br from-primary/20 to-secondary/10 border-primary/40'
+                } hover:shadow-lg hover:scale-105 animate-bounce-in`}
+              >
+                <div className="text-center px-6">
+                  <div className="mb-4">
+                    <span className={`text-xs font-bold px-3 py-1 rounded-full ${
+                      flipped
+                        ? 'bg-accent/30 text-accent'
+                        : 'bg-primary/30 text-primary'
+                    }`}>
+                      {flipped ? '✓ Answer' : '❓ Question'}
+                    </span>
+                  </div>
+                  <p className={`text-lg font-semibold transition-all duration-300 ${
+                    flipped ? 'text-accent' : 'text-primary'
+                  }`}>
+                    {flipped ? card.a : card.q}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-6 animate-float">
+                    💡 Click to flip
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Navigation */}
             <div className="flex gap-3">
               <Button
-                onClick={() => setCurrentFlashcardIndex(Math.max(0, currentFlashcardIndex - 1))}
+                onClick={() => {
+                  setCurrentFlashcardIndex(Math.max(0, currentFlashcardIndex - 1));
+                  setFlipped(false);
+                }}
+                disabled={currentFlashcardIndex === 0}
                 variant="outline"
-                className="flex-1"
+                className="flex-1 border-primary/30 text-primary hover:bg-primary/10"
               >
                 ← Previous
               </Button>
               <Button
-                onClick={() => setCurrentFlashcardIndex(Math.min(selectedPack.flashcards.length - 1, currentFlashcardIndex + 1))}
-                variant="outline"
-                className="flex-1"
+                onClick={() => {
+                  setCurrentFlashcardIndex(Math.min(selectedPack.flashcards.length - 1, currentFlashcardIndex + 1));
+                  setFlipped(false);
+                }}
+                disabled={currentFlashcardIndex === selectedPack.flashcards.length - 1}
+                className="flex-1 bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-primary-foreground"
               >
                 Next →
               </Button>
