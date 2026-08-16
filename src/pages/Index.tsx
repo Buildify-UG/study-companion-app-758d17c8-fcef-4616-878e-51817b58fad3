@@ -94,28 +94,69 @@ const StudySister: React.FC = () => {
     }
   };
 
+  const extractKeyTerms = (text: string): string[] => {
+    // Extract potential key terms (capitalized words, common patterns)
+    const words = text.match(/\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*\b/g) || [];
+    return [...new Set(words)].slice(0, 5);
+  };
+
   const generateStudyPack = () => {
     if (!selectedSubject || !materialInput.trim()) return;
+
+    const keyTerms = extractKeyTerms(materialInput);
+    const sentences = materialInput.split(/[.!?]+/).filter(s => s.trim().length > 0);
+    
+    // Generate detailed flashcards from the notes
+    const flashcards = [
+      {
+        q: `Define "${topicInput}" based on the provided material`,
+        a: sentences[0]?.trim() || 'Review the first sentence of your notes for the definition'
+      },
+      {
+        q: `What are the key characteristics or components of ${topicInput}?`,
+        a: sentences.slice(1, 3).join('. ').trim() || 'Look for descriptive elements in your notes'
+      },
+      {
+        q: `Why is ${topicInput} important to understand?`,
+        a: sentences[Math.floor(sentences.length / 2)]?.trim() || 'Consider the context and significance in your material'
+      },
+      ...keyTerms.slice(0, 2).map((term, i) => ({
+        q: `Explain what "${term}" means in the context of ${topicInput}`,
+        a: sentences[i + 2]?.trim() || `Find where "${term}" is mentioned in your notes and explain its role`
+      })),
+      {
+        q: `What examples or applications of ${topicInput} are mentioned in your notes?`,
+        a: sentences[sentences.length - 1]?.trim() || 'Look for specific examples or use cases in your material'
+      }
+    ];
+
+    const keyPoints = sentences.slice(0, 4).map(s => s.trim()).filter(s => s.length > 10);
 
     const pack: StudyPack = {
       id: Date.now().toString(),
       subject: selectedSubject.name,
       topic: topicInput || 'General',
-      explanation: `StudySister AI Analysis:\n\nYour study material on "${topicInput || 'this topic'}" has been analyzed. Here's a simple breakdown:\n\n${materialInput.substring(0, 200)}...\n\nKey insights: Break this material into smaller chunks, focus on the definitions and relationships between concepts.`,
-      keyPoints: [
+      explanation: `StudySister AI Analysis:\n\nYour study material on "${topicInput}" has been analyzed:\n\n${materialInput}\n\nKey insights: This material covers ${keyTerms.join(', ')}. Focus on understanding how these elements relate and interact.`,
+      keyPoints: keyPoints.length > 0 ? keyPoints : [
         'Understand the core definition and concept',
         'Identify key relationships and connections',
         'Practice recall without looking at notes',
         'Apply the concept to real-world examples',
       ],
-      flashcards: [
-        { q: `What is the main concept of ${topicInput}?`, a: 'Review your notes to identify the core definition' },
-        { q: `How does ${topicInput} connect to other topics?`, a: 'Look for relationships with related concepts' },
-        { q: `Can you explain ${topicInput} in simple terms?`, a: 'Try to explain it as if teaching a friend' },
-      ],
+      flashcards: flashcards.slice(0, 6),
       quiz: [
-        { q: `Which of these best describes ${topicInput}?`, options: ['Option A', 'Option B', 'Option C', 'Option D'], correct: 0 },
-        { q: `What is an example of ${topicInput}?`, options: ['Example 1', 'Example 2', 'Example 3', 'Example 4'], correct: 1 },
+        { q: `Which of these best describes ${topicInput}?`, options: [
+          sentences[0]?.substring(0, 50) || 'Option A',
+          'A generic alternative',
+          'Another possibility',
+          'Yet another choice'
+        ], correct: 0 },
+        { q: `What is a key characteristic of ${topicInput}?`, options: [
+          keyTerms[0] || 'Characteristic 1',
+          'Wrong answer',
+          'Another wrong answer',
+          'Incorrect option'
+        ], correct: 0 },
       ],
     };
 
